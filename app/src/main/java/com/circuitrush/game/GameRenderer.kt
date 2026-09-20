@@ -489,7 +489,7 @@ class GameRenderer(
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
         val aspect = vw.toFloat() / vh.toFloat()
-        Matrix.perspectiveM(proj, 0, fov, aspect, 0.4f, 1600f)
+        Matrix.perspectiveM(proj, 0, fov, aspect, 0.6f, 1500f)
         Matrix.setLookAtM(view, 0, ex, ey, ez, lx, ly, lz, 0f, 1f, 0f)
         Matrix.multiplyMM(vp, 0, proj, 0, view, 0)
         Matrix.invertM(invVp, 0, vp, 0)

@@ -140,6 +140,10 @@ class MainActivity : Activity(), Host, SensorEventListener {
 
     @Suppress("OVERRIDE_DEPRECATION")
     override fun onBackPressed() {
+        if (!::menuLayer.isInitialized || !::resultLayer.isInitialized) {
+            super.onBackPressed()
+            return
+        }
         if (inRace) {
             if (Game.paused) resumeRace() else showPause()
         } else if (resultLayer.visibility == View.VISIBLE) {
