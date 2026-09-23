@@ -4,6 +4,7 @@ import android.content.Context
 import org.json.JSONObject
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -141,10 +142,10 @@ object SceneBuilder {
 
         // ground tiles
         val bnd = js.getJSONArray("bounds")
-        val gx0 = bnd.getDouble(0).toFloat() - 120f
-        val gz0 = bnd.getDouble(1).toFloat() - 120f
-        val gx1 = bnd.getDouble(2).toFloat() + 120f
-        val gz1 = bnd.getDouble(3).toFloat() + 120f
+        val gx0 = bnd.getDouble(0).toFloat() - 360f
+        val gz0 = bnd.getDouble(1).toFloat() - 360f
+        val gx1 = bnd.getDouble(2).toFloat() + 360f
+        val gz1 = bnd.getDouble(3).toFloat() + 360f
         val tile = 40f
         var ix = 0
         var x = gx0
@@ -153,9 +154,9 @@ object SceneBuilder {
             var z = gz0
             while (z < gz1) {
                 val even = ((ix + iz) and 1) == 0
-                val r = if (even) 0.028f else 0.036f
-                val g = if (even) 0.165f else 0.195f
-                val b = if (even) 0.030f else 0.036f
+                val r = if (even) 0.040f else 0.050f
+                val g = if (even) 0.215f else 0.255f
+                val b = if (even) 0.045f else 0.055f
                 batch.triP(x, -0.03f, z, x, -0.03f, z + tile, x + tile, -0.03f, z + tile, 0f, 1f, 0f, r, g, b, 0f)
                 batch.triP(x, -0.03f, z, x + tile, -0.03f, z + tile, x + tile, -0.03f, z, 0f, 1f, 0f, r, g, b, 0f)
                 z += tile
@@ -164,6 +165,10 @@ object SceneBuilder {
             x += tile
             ix++
         }
+
+        // rebuilt road, kerbs and distant mountain silhouettes
+        addRoadSurface(batch, js)
+        addMountainRidges(batch, bnd)
 
         // track pieces
         val pieces = js.getJSONArray("pieces")
@@ -192,6 +197,103 @@ object SceneBuilder {
             addTree(batch, t.getDouble(0).toFloat(), t.getDouble(1).toFloat(), t.getDouble(2).toFloat(), t.getInt(3))
         }
         return batch.build()
+    }
+
+    private fun addRoadSurface(b: StaticBatch, js: JSONObject) {
+        val cl = js.getJSONArray("cl")
+        val n = js.getInt("n")
+        val half = js.getDouble("half").toFloat()
+        val kerb = js.getDouble("kerb").toFloat()
+        val roadY = 0.045f
+        val kerbY = 0.055f
+        for (i in 0 until n) {
+            val j = (i + 1) % n
+            val x0 = cl.getDouble(i * 4).toFloat()
+            val z0 = cl.getDouble(i * 4 + 1).toFloat()
+            val h0 = cl.getDouble(i * 4 + 2).toFloat()
+            val x1 = cl.getDouble(j * 4).toFloat()
+            val z1 = cl.getDouble(j * 4 + 1).toFloat()
+            val h1 = cl.getDouble(j * 4 + 2).toFloat()
+
+            val l0x = x0 - cos(h0) * half
+            val l0z = z0 + sin(h0) * half
+            val r0x = x0 + cos(h0) * half
+            val r0z = z0 - sin(h0) * half
+            val l1x = x1 - cos(h1) * half
+            val l1z = z1 + sin(h1) * half
+            val r1x = x1 + cos(h1) * half
+            val r1z = z1 - sin(h1) * half
+
+            val roadR = if ((i and 1) == 0) 0.075f else 0.085f
+            val roadG = if ((i and 1) == 0) 0.085f else 0.095f
+            val roadB = if ((i and 1) == 0) 0.10f else 0.11f
+            b.triP(l0x, roadY, l0z, r0x, roadY, r0z, r1x, roadY, r1z, 0f, 1f, 0f, roadR, roadG, roadB, 0.08f)
+            b.triP(l0x, roadY, l0z, r1x, roadY, r1z, l1x, roadY, l1z, 0f, 1f, 0f, roadR, roadG, roadB, 0.08f)
+
+            val stripe = ((i / 5) and 1) == 0
+            val cr = if (stripe) 0.82f else 0.88f
+            val cg = if (stripe) 0.03f else 0.88f
+            val cb = if (stripe) 0.02f else 0.88f
+
+            val ll0x = x0 - cos(h0) * kerb
+            val ll0z = z0 + sin(h0) * kerb
+            val rr0x = x0 + cos(h0) * kerb
+            val rr0z = z0 - sin(h0) * kerb
+            val ll1x = x1 - cos(h1) * kerb
+            val ll1z = z1 + sin(h1) * kerb
+            val rr1x = x1 + cos(h1) * kerb
+            val rr1z = z1 - sin(h1) * kerb
+
+            b.triP(l0x, kerbY, l0z, ll0x, kerbY, ll0z, ll1x, kerbY, ll1z, 0f, 1f, 0f, cr, cg, cb, 0f)
+            b.triP(l0x, kerbY, l0z, ll1x, kerbY, ll1z, l1x, kerbY, l1z, 0f, 1f, 0f, cr, cg, cb, 0f)
+            b.triP(r0x, kerbY, r0z, r1x, kerbY, r1z, rr1x, kerbY, rr1z, 0f, 1f, 0f, cr, cg, cb, 0f)
+            b.triP(r0x, kerbY, r0z, rr1x, kerbY, rr1z, rr0x, kerbY, rr0z, 0f, 1f, 0f, cr, cg, cb, 0f)
+        }
+    }
+
+    private fun addMountainRidges(b: StaticBatch, bnd: org.json.JSONArray) {
+        val minX = bnd.getDouble(0).toFloat()
+        val minZ = bnd.getDouble(1).toFloat()
+        val maxX = bnd.getDouble(2).toFloat()
+        val maxZ = bnd.getDouble(3).toFloat()
+        val span = 230f
+        val stepH = 48f
+        val stepV = 48f
+
+        fun hRidge(z: Float, toward: Float, seed: Float, height: Float, rr: Float, gg: Float, bb: Float) {
+            var x = minX - span
+            while (x < maxX + span) {
+                val x1 = min(x + stepH, maxX + span)
+                val mid = (x + x1) * 0.5f
+                val w = 0.56f + 0.44f * sin(mid * 0.032f + seed)
+                val w2 = 0.50f + 0.50f * cos(mid * 0.068f - seed * 1.4f)
+                val h = height * (0.58f + 0.42f * w) + 7f * w2
+                val depth = z + toward * 70f
+                b.triP(x, 0f, z, mid, h, z, x1, 0f, z, 0f, 0.58f, -toward * 0.82f, rr, gg, bb, 0f)
+                b.triP(x, 0f, depth, x1, 0f, depth, mid, h, z + toward * 26f, 0f, 0.58f, -toward * 0.82f, rr * 0.88f, gg * 0.88f, bb * 0.88f, 0f)
+                x = x1
+            }
+        }
+
+        fun vRidge(x: Float, toward: Float, seed: Float, height: Float, rr: Float, gg: Float, bb: Float) {
+            var z = minZ - span
+            while (z < maxZ + span) {
+                val z1 = min(z + stepV, maxZ + span)
+                val mid = (z + z1) * 0.5f
+                val w = 0.56f + 0.44f * sin(mid * 0.028f + seed)
+                val w2 = 0.50f + 0.50f * cos(mid * 0.061f - seed)
+                val h = height * (0.58f + 0.42f * w) + 7f * w2
+                val depth = x + toward * 70f
+                b.triP(x, 0f, z, x, h, mid, x, 0f, z1, toward * 0.82f, 0.58f, 0f, rr, gg, bb, 0f)
+                b.triP(depth, 0f, z, depth, 0f, z1, x, h, mid, toward * 0.82f, 0.58f, 0f, rr * 0.88f, gg * 0.88f, bb * 0.88f, 0f)
+                z = z1
+            }
+        }
+
+        hRidge(maxZ + span, -1f, 2.0f, 86f, 0.16f, 0.28f, 0.30f)
+        hRidge(minZ - span, 1f, 5.0f, 74f, 0.14f, 0.26f, 0.32f)
+        vRidge(minX - span, 1f, 7.0f, 70f, 0.15f, 0.27f, 0.24f)
+        vRidge(maxX + span, -1f, 11.0f, 80f, 0.17f, 0.27f, 0.28f)
     }
 
     private fun addTree(b: StaticBatch, x: Float, z: Float, s: Float, type: Int) {

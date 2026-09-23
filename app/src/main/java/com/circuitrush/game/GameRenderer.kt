@@ -58,7 +58,7 @@ class GameRenderer(
 ) : GLSurfaceView.Renderer {
 
     private val STEP = 1f / 60f
-    private val DRAW_DIST = 620f
+    private val DRAW_DIST = 900f
 
     private var loaded = false
     private var track: Track? = null
@@ -293,13 +293,15 @@ class GameRenderer(
             void main() {
                 vec4 wp = uInvVP * vec4(vNdc, 1.0, 1.0);
                 vec3 dir = normalize(wp.xyz / wp.w - uCam);
-                float h = dir.y;
-                vec3 horizon = vec3(0.70, 0.78, 0.86);
-                vec3 zenith = vec3(0.16, 0.36, 0.72);
-                vec3 col = mix(horizon, zenith, smoothstep(0.0, 0.55, h));
-                col = mix(col, vec3(0.50, 0.60, 0.52), smoothstep(0.02, -0.15, h));
+                float h = clamp(dir.y, -0.20, 1.0);
+                float skyT = smoothstep(-0.06, 0.72, h);
+                vec3 horizon = vec3(0.58, 0.72, 0.84);
+                vec3 zenith = vec3(0.10, 0.30, 0.65);
+                vec3 col = mix(horizon, zenith, skyT);
+                float lowT = 1.0 - smoothstep(-0.10, 0.06, h);
+                col = mix(col, vec3(0.43, 0.52, 0.43), lowT * 0.38);
                 float sd = max(dot(dir, normalize(uSun)), 0.0);
-                col += vec3(1.0, 0.85, 0.6) * (pow(sd, 400.0) * 1.5 + pow(sd, 12.0) * 0.15);
+                col += vec3(1.0, 0.78, 0.42) * (pow(sd, 280.0) * 1.7 + pow(sd, 18.0) * 0.10);
                 outColor = vec4(col, 1.0);
             }
         """.trimIndent()
@@ -516,22 +518,17 @@ class GameRenderer(
         GLES20.glUniform3f(uCam, ex, ey, ez)
         GLES20.glUniform3f(uSun, 0.45f, 0.75f, 0.40f)
         GLES20.glUniform3f(uFog, 0.456f, 0.579f, 0.717f)
-        GLES20.glUniform1f(uFogD, 0.0028f)
+        GLES20.glUniform1f(uFogD, 0.0020f)
         GLES20.glUniform1f(uAlpha, 1f)
         GLES20.glUniformMatrix4fv(uModel, 1, false, ident4, 0)
         GLES20.glUniformMatrix3fv(uNorm, 1, false, ident3, 0)
 
-        var fdx = lx - ex
-        var fdz = lz - ez
-        val fl = sqrt(fdx * fdx + fdz * fdz)
-        if (fl > 1e-4f) { fdx /= fl; fdz /= fl }
         for (ch in chunks) {
             val dx = ch.cx - ex
             val dz = ch.cz - ez
             val d2 = dx * dx + dz * dz
             val maxd = DRAW_DIST + ch.radius
             if (d2 > maxd * maxd) continue
-            if (dx * fdx + dz * fdz < -ch.radius) continue
             GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, ch.vbo)
             GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 40, 0)
             GLES20.glEnableVertexAttribArray(0)

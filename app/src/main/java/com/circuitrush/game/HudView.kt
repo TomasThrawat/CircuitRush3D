@@ -65,13 +65,13 @@ class HudView(ctx: Context) : View(ctx) {
     }
 
     private fun pad(c: Canvas, r: RectF, pressed: Boolean, red: Int, green: Int, blue: Int) {
-        val rad = 0.22f * u
+        val rad = 0.24f * u
         p.style = Paint.Style.FILL
-        p.color = Color.argb(if (pressed) 130 else 55, red, green, blue)
+        p.color = Color.argb(if (pressed) 150 else 82, 7, 13, 25)
         c.drawRoundRect(r, rad, rad, p)
         p.style = Paint.Style.STROKE
-        p.strokeWidth = 0.04f * u
-        p.color = Color.argb(140, 255, 255, 255)
+        p.strokeWidth = 0.045f * u
+        p.color = Color.argb(if (pressed) 225 else 145, red, green, blue)
         c.drawRoundRect(r, rad, rad, p)
         p.style = Paint.Style.FILL
     }
@@ -114,7 +114,7 @@ class HudView(ctx: Context) : View(ctx) {
 
     private fun drawHud(c: Canvas, s: HudState) {
         val white = Color.WHITE
-        val soft = Color.argb(200, 255, 255, 255)
+        val soft = Color.argb(205, 218, 229, 242)
 
         // steering pads: right-arrow in the LEFT slot, left-arrow in the RIGHT slot
         if (!Game.useTilt) {
@@ -173,8 +173,13 @@ class HudView(ctx: Context) : View(ctx) {
         // minimap
         if (!mmBuilt) buildMinimap()
         p.style = Paint.Style.FILL
-        p.color = Color.argb(100, 0, 0, 0)
-        c.drawRoundRect(rMap, 0.22f * u, 0.22f * u, p)
+        p.color = Color.argb(132, 5, 11, 21)
+        c.drawRoundRect(rMap, 0.24f * u, 0.24f * u, p)
+        p.style = Paint.Style.STROKE
+        p.strokeWidth = 0.045f * u
+        p.color = Color.argb(150, 95, 223, 255)
+        c.drawRoundRect(rMap, 0.24f * u, 0.24f * u, p)
+        p.style = Paint.Style.FILL
         if (mmBuilt) {
             p.style = Paint.Style.STROKE
             p.strokeWidth = 0.09f * u

@@ -89,7 +89,7 @@ class MainActivity : Activity(), Host, SensorEventListener {
         loading.setTextColor(Color.WHITE)
         loading.textSize = 18f
         loading.gravity = Gravity.CENTER
-        loading.setBackgroundColor(0xFF0B0B12.toInt())
+        loading.setBackgroundColor(0xFF06101C.toInt())
         root.addView(loading, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
 
         setContentView(root)
@@ -138,7 +138,7 @@ class MainActivity : Activity(), Host, SensorEventListener {
         }
     }
 
-    @Suppress("OVERRIDE_DEPRECATION")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onBackPressed() {
         if (!::menuLayer.isInitialized || !::resultLayer.isInitialized) {
             super.onBackPressed()
@@ -281,22 +281,23 @@ class MainActivity : Activity(), Host, SensorEventListener {
         val panel = LinearLayout(this)
         panel.orientation = LinearLayout.VERTICAL
         panel.setPadding(dp(20), dp(14), dp(20), dp(14))
-        panel.background = roundBg(0xD90B0B12.toInt(), 16)
+        panel.background = roundBg(0xE8071424.toInt(), 18)
 
         val title = TextView(this)
         title.text = "CIRCUIT RUSH 3D"
         title.setTextColor(Color.WHITE)
-        title.textSize = 22f
+        title.textSize = 24f
         title.setTypeface(title.typeface, android.graphics.Typeface.BOLD_ITALIC)
+        title.setTextColor(0xFFF5FBFF.toInt())
         panel.addView(title)
         val sub = TextView(this)
         sub.text = "Single player  |  vs AI"
-        sub.setTextColor(0xFFE10600.toInt())
+        sub.setTextColor(0xFF5FE4FF.toInt())
         sub.textSize = 12f
         sub.setPadding(0, 0, 0, dp(8))
         panel.addView(sub)
 
-        panel.addView(btn("START RACE", 0xFFE10600.toInt(), 20f) { startRace() }, lp(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        panel.addView(btn("START RACE", 0xFFE34C2F.toInt(), 20f) { startRace() }, lp(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
 
         val names = Game.carNames
         panel.addView(optionRow("Car", { if (names.isEmpty()) "-" else names[carIdx.coerceIn(0, names.size - 1)] },
@@ -330,7 +331,7 @@ class MainActivity : Activity(), Host, SensorEventListener {
 
         val scroll = ScrollView(this)
         scroll.addView(panel)
-        val flp = FrameLayout.LayoutParams(dp(360), FrameLayout.LayoutParams.MATCH_PARENT)
+        val flp = FrameLayout.LayoutParams(dp(380), FrameLayout.LayoutParams.MATCH_PARENT)
         flp.leftMargin = dp(16)
         flp.topMargin = dp(8)
         flp.bottomMargin = dp(8)
@@ -347,13 +348,13 @@ class MainActivity : Activity(), Host, SensorEventListener {
         val panel = LinearLayout(this)
         panel.orientation = LinearLayout.VERTICAL
         panel.setPadding(dp(24), dp(18), dp(24), dp(18))
-        panel.background = roundBg(0xEE0B0B12.toInt(), 16)
+        panel.background = roundBg(0xF0071424.toInt(), 18)
         return panel
     }
 
     private fun buildPause() {
         pauseLayer = FrameLayout(this)
-        pauseLayer.setBackgroundColor(0x88000000.toInt())
+        pauseLayer.setBackgroundColor(0x9A000712.toInt())
         val panel = centerPanel()
         val t = TextView(this)
         t.text = "PAUSED"
@@ -374,7 +375,7 @@ class MainActivity : Activity(), Host, SensorEventListener {
 
     private fun buildResults() {
         resultLayer = FrameLayout(this)
-        resultLayer.setBackgroundColor(0x99000000.toInt())
+        resultLayer.setBackgroundColor(0xA6000712.toInt())
         val panel = centerPanel()
         resultBody = LinearLayout(this)
         resultBody.orientation = LinearLayout.VERTICAL
